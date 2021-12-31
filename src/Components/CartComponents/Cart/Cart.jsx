@@ -4,7 +4,7 @@ import styles from "./Cart.module.scss";
 const Cart = ({ onCloseCart }) => {
   const cartItems = [{ id: "c1", name: "Sushi", amount: "1", price: "9.99" }];
   return (
-    <Modal>
+    <Modal onClick={onCloseCart}>
       <ul className={styles["cart-items"]}>
         {cartItems.map((item) => (
           <li>{item.name}</li>

@@ -1,8 +1,8 @@
 import ReactDOM from "react-dom";
 import styles from "./Modal.module.scss";
 
-const Backdrop = () => {
-  return <div className={styles.backdrop}></div>;
+const Backdrop = ({ onClick }) => {
+  return <div className={styles.backdrop} onClick={onClick}></div>;
 };
 
 const ModalOverlay = ({ children }) => {
@@ -15,10 +15,10 @@ const ModalOverlay = ({ children }) => {
 
 const portal = document.getElementById("overlays");
 
-const Modal = ({ children }) => {
+const Modal = ({ onClick, children }) => {
   return (
     <>
-      {ReactDOM.createPortal(<Backdrop />, portal)}
+      {ReactDOM.createPortal(<Backdrop onClick={onClick} />, portal)}
       {ReactDOM.createPortal(<ModalOverlay>{children}</ModalOverlay>, portal)}
     </>
   );
