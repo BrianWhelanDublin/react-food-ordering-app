@@ -1,10 +1,15 @@
 import Modal from "../../UI/Modal/Modal";
 import styles from "./Cart.module.scss";
 import CartContext from "../../../store/cart-context";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import CartItem from "../CartItem/CartItem";
+import Checkout from "../Checkout/Checkout";
 
 const Cart = ({ onCloseCart }) => {
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [didSubmit, setDidSubmit] = useState(false);
+
   const cartContext = useContext(CartContext);
 
   const cartItemAddHandler = (item) => {
@@ -15,9 +20,39 @@ const Cart = ({ onCloseCart }) => {
     cartContext.removeItem(id);
   };
 
-  //   const cartItems = [{ id: "c1", name: "Sushi", amount: "1", price: "9.99" }];
-  return (
-    <Modal onClick={onCloseCart}>
+  const orderHandler = () => setShowCheckout(true);
+
+  const cancelHandler = () => setShowCheckout(false);
+
+  const submitOrderHandler = async (userData) => {
+    setShowCheckout(false);
+    setIsSubmitting(true);
+    const response = await fetch(process.env.REACT_APP_DATABASE_URL_ORDERS, {
+      method: "POST",
+      body: JSON.stringify({
+        user: userData,
+        orderItems: cartContext.items,
+      }),
+    });
+    if (!response.ok) {
+      console.log("error");
+    }
+
+    setIsSubmitting(false);
+    setDidSubmit(true);
+    cartContext.clearCart();
+  };
+
+  if (showCheckout) {
+    return (
+      <Modal onClick={onCloseCart}>
+        <Checkout onConfirm={submitOrderHandler} onCancel={cancelHandler} />
+      </Modal>
+    );
+  }
+
+  const cartModalContent = (
+    <>
       <ul className={styles["cart-items"]}>
         {cartContext.items.map((item) => (
           <CartItem
@@ -30,18 +65,42 @@ const Cart = ({ onCloseCart }) => {
           />
         ))}
       </ul>
+
       <div className={styles.total}>
         <span>Total</span>
         <span>€ {cartContext.totalAmount.toFixed(2)}</span>
       </div>
+
       <div className={styles.actions}>
         <button className={styles["button--alt"]} onClick={onCloseCart}>
           Close
         </button>
         {cartContext.items.length > 0 && (
-          <button className={styles.button}>Order</button>
+          <button className={styles.button} onClick={orderHandler}>
+            Order
+          </button>
         )}
       </div>
+    </>
+  );
+
+  const isSubmittingModalContent = <p>Sending Order Data ...</p>;
+
+  const didSubmitModalContent = (
+    <>
+      <p>Order Sent Succesfully</p>
+      <div className={styles.actions}>
+        <button className={styles.button} onClick={onCloseCart}>
+          Close
+        </button>
+      </div>
+    </>
+  );
+  return (
+    <Modal onClick={onCloseCart}>
+      {!isSubmitting && !didSubmit && cartModalContent}
+      {isSubmitting && isSubmittingModalContent}
+      {!isSubmitting && didSubmit && didSubmitModalContent}
     </Modal>
   );
 };
